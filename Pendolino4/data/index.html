@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>倒立振子 パラメータ調整</title>
+<style>
+#text_K1 {color: red;}
+#text_K2 {color: darkorange;}
+#text_K3 {color: green;}
+#text_K4 {color: blue;}
+#text_theta0 {color: black;}
+</style>
+</head>
+
+<html>
+<body style='background:white; color:black; font-size:120%;'>
+
+<form method='get'>
+
+<h2>倒立振子 パラメータ調整</h2>
+
+  <h3>制御パラメータ</h3>
+
+    <span id='text_K1'>K1</span>
+    <input type='range' min='0' max='1000' step = '1' class='slider' id='K1_slider' value=0 
+        oninput='changeSliderPosition(this)' style='width:25em;'/>
+    <span id='val_K1'>0</span><BR>
+    
+    <span id='text_K2'>K2</span> 
+    <input type='range' min='0' max='1000' step = '1' class='slider' id='K2_slider' value=0
+        oninput='changeSliderPosition(this)' style='width:25em;'/>
+    <span id='val_K2'>0</span><BR>
+    
+    <span id='text_K3'>K3</span>
+    <input type='range' min='0' max='1000' step = '1' class='slider' id='K3_slider' value=0
+        oninput='changeSliderPosition(this)' style='width:25em;'/>
+    <span id='val_K3'>0</span><BR>
+    
+    <span id='text_K4'>K4</span>
+    <input type='range' min='0' max='1000' step = '1' class='slider' id='K4_slider' value=0 
+        oninput='changeSliderPosition(this)' style='width:25em;'/>
+    <span id='val_K4'>0</span><BR>
+    
+    <span id='text_theta0'>θ0</span>
+    <input type='range' min='-30' max='30' step = '0.1' class='slider' id='theta0_slider' value=0 
+        oninput='changeSliderPosition(this)' style='width:25em;'/>
+    <span id='val_theta0'>0</span><BR>
+    
+    EEPROM 
+    <input type='button' id='load_button' value="LOAD" onclick="clickButton(this)" ></input>
+    <input type='button' id='save_button' value="SAVE" onclick="clickButton(this)" ></input>
+
+  <h3>動作</h3>
+    制御 
+    <input type='button' id='on_button' value="ON" onclick="clickButton(this)" ></input>
+    <input type='button' id='off_button' value="OFF" onclick="clickButton(this)" ></input>
+    <BR>
+    IMUセンサのキャリブレーション 
+    <input type='button' id='calib_button' value="START" onclick="clickButton(this)" ></input>
+</form>
+
+<script>
+      function changeSliderPosition(element) {
+
+        if(element.id=='K1_slider') {
+          document.getElementById("val_K1").innerHTML = element.value;
+          sendRequest("?K1=" + element.value);
+        }
+        if(element.id=='K2_slider') {
+          document.getElementById("val_K2").innerHTML = element.value;
+          sendRequest("?K2=" + element.value);
+        }
+        if(element.id=='K3_slider') {
+          document.getElementById("val_K3").innerHTML = element.value;
+          sendRequest("?K3=" + element.value);
+        }
+        if(element.id=='K4_slider') {
+          document.getElementById("val_K4").innerHTML = element.value;
+          sendRequest("?K4=" + element.value);
+        }
+        if(element.id=='theta0_slider') {
+          document.getElementById("val_theta0").innerHTML = element.value;
+          sendRequest("?theta0=" + element.value);
+        }
+      }
+
+      function clickButton(element) {
+        if(element.id=='load_button') {
+          sendRequestLoad("?load=1");
+        }
+        if(element.id=='save_button') {
+          sendRequest("?save=1");
+        }
+        if(element.id=='on_button') {
+          sendRequest("?ctrl_on=1");
+        }
+        if(element.id=='off_button') {
+          sendRequest("?ctrl_on=0");
+        }
+        if(element.id=='calib_button') {
+          sendRequest("?calib=1");
+        }
+      }
+  
+      function sendRequest(str) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', str, true); 
+        xhr.send();
+      }
+
+      function sendRequestLoad(str) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var domDoc = this.responseXML;
+            // console.log("xml=" + domDoc);
+            var K1 = parseFloat(domDoc.getElementsByTagName('K1')[0].childNodes[0].nodeValue);
+            var K2 = parseFloat(domDoc.getElementsByTagName('K2')[0].childNodes[0].nodeValue);
+            var K3 = parseFloat(domDoc.getElementsByTagName('K3')[0].childNodes[0].nodeValue);
+            var K4 = parseFloat(domDoc.getElementsByTagName('K4')[0].childNodes[0].nodeValue);
+            var theta0 = parseFloat(domDoc.getElementsByTagName('theta0')[0].childNodes[0].nodeValue);
+            document.getElementById("val_K1").innerHTML = K1.toFixed(0);
+            document.getElementById("val_K2").innerHTML = K2.toFixed(0);
+            document.getElementById("val_K3").innerHTML = K3.toFixed(0);
+            document.getElementById("val_K4").innerHTML = K4.toFixed(0);
+            document.getElementById("val_theta0").innerHTML = theta0.toFixed(1);
+            document.getElementById('K1_slider').value = K1;
+            document.getElementById('K2_slider').value = K2;
+            document.getElementById('K3_slider').value = K3;
+            document.getElementById('K4_slider').value = K4;
+            document.getElementById('theta0_slider').value = theta0;
+          }
+        };
+        xhr.open('GET', str, true); 
+        xhr.send();
+      }
+</script>
+
+</body>
+</html>
