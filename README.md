@@ -2,6 +2,8 @@
 
 ![写真](images/front_back.jpg)
 
+[前面拡大](images/front.jpg) / [背面拡大](images/back.jpg)
+
 ## メカ
 タミヤの「楽しい工作シリーズ」の部品を使用します。
 [「半日で作る倒立振子」](https://www.instructables.com/%E5%8D%8A%E6%97%A5%E3%81%A7%E4%BD%9C%E3%82%8B%E5%80%92%E7%AB%8B%E6%8C%AF%E5%AD%90/)を参考にしました。
