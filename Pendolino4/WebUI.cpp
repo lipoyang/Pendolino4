@@ -5,6 +5,7 @@
 #include <WebServer.h>
 #include <FS.h>
 #include <SPIFFS.h>
+#include <EEPROM.h>
 
 #include "WebUI.h"
 
@@ -31,12 +32,6 @@ static WebServer webServer(80);
 static DNSServer dnsServer;
 // WebUI (このクラス)
 static WebUI *webUI;
-
-// デフォルトポート番号
-//#define DEFAULT_LOCAL_PORT  80
-
-// 無効なIPアドレス
-static const IPAddress NULL_ADDR(0,0,0,0);
 
 // リクエストパラメータの取得
 // name: パラメータ名
@@ -163,6 +158,27 @@ static void handleRoot()
     }
 }
 
+// "/ap_settings.html" へのアクセスの処理
+static void handleApSettings()
+{
+    Serial.println("handleApSettings");
+    
+    if (webServer.method() == HTTP_POST)
+    {
+        String ap_ssid     = webServer.arg("ap_ssid");
+        String ap_password = webServer.arg("ap_password");
+        webUI->saveApSettings(ap_ssid.c_str(), ap_password.c_str());
+        
+        Serial.println("AP Settings");
+        Serial.println(ap_ssid);
+        Serial.println(ap_password);
+    }
+    // ap_settings.htmlをブラウザに送る
+    File file = SPIFFS.open("/ap_settings.html", FILE_READ);
+    size_t sent = webServer.streamFile(file, "text/html");
+    file.close();
+}
+
 // 401 Not Found の処理
 static void handleNotFound()
 {
@@ -181,15 +197,15 @@ static void handleNotFound()
 }
 
 // コンストラクタ
-WebUI::WebUI()
+WebUI::WebUI(int baseAddress)
 {
+    webUI = this;
+    
+    // EEPROMのベースアドレス
+    m_baseAddress = baseAddress;
+    
     // 排他制御の初期化
     mutex = xSemaphoreCreateMutex();
-
-//    this->localPort = DEFAULT_LOCAL_PORT;
-    
-//    onRequest = NULL;
-//    remoteIP = NULL_ADDR;
 }
 
 // APモードでWiFiを開始する
@@ -215,7 +231,6 @@ void WebUI::beginAP(char* ssid, char* password, char* hostName)
     Serial.println();
     Serial.print("AP SSID: ");Serial.println(mySSID);
     Serial.print("AP IP address: ");Serial.println(localIP);
-//    remoteIP = NULL_ADDR;
     
     // DNSサーバ開始
     // Captive Portal (すべてのアクセスを横取りして自分に仕向ける)
@@ -225,9 +240,10 @@ void WebUI::beginAP(char* ssid, char* password, char* hostName)
     SPIFFS.begin();
     
     // Webサーバの設定
-    webUI = this;
     webServer.on("/", handleRoot);
-    webServer.onNotFound(handleRoot); // 全て "/" にリダイレクト
+    webServer.on("/index.html", handleRoot);
+    webServer.on("/ap_settings.html", handleApSettings);
+    webServer.onNotFound(handleRoot); // その他全て "/" にリダイレクト
     webServer.begin();
 }
 
@@ -240,6 +256,7 @@ void WebUI::beginSTA(char* ssid, char* password, char* hostName)
     // SSID文字列
     strncpy(hisSSID, ssid, sizeof(hisSSID)-1);
     hisSSID[sizeof(hisSSID)-1] = '\0';
+    Serial.print("AP SSID: ");Serial.println(hisSSID);
     // パスワード文字列
     strncpy(hisPassword, password, sizeof(hisPassword)-1);
     hisPassword[sizeof(hisPassword)-1] = '\0';
@@ -260,8 +277,9 @@ void WebUI::beginSTA(char* ssid, char* password, char* hostName)
     SPIFFS.begin();
     
     // Webサーバの設定
-    webUI = this;
     webServer.on("/", handleRoot);
+    webServer.on("/index.html", handleRoot);
+    webServer.on("/ap_settings.html", handleApSettings);
     webServer.onNotFound(handleNotFound);
     webServer.begin();
 }
@@ -308,7 +326,6 @@ void WebUI::loopSTA()
             localIP = WiFi.localIP();
             Serial.print("Connected to "); Serial.println(hisSSID);
             Serial.print("STA IP address: "); Serial.println(localIP);
-//            remoteIP = NULL_ADDR;
             
             // mDNSを開始
             if ( MDNS.begin ( hostName ) ) {
@@ -345,4 +362,51 @@ bool WebUI::isReady()
     }else{
         return isConnected;
     }
+}
+
+// AP設定をEEPROMから読み出す(STAモードで使用)
+// return: 有効な設定を読み出せたか？
+bool WebUI::loadApSettings(char* ssid, char* password)
+{
+    // オフセットアドレス0にマジックワードが書かれていたら
+    // 有効なデータがあると判断して読み出す
+    if(EEPROM.read(m_baseAddress+0) == 0xA5)
+    {
+        for(int i=0; i<32; i++){
+            ssid[i] = EEPROM.read(m_baseAddress + 1 + i);
+            if(ssid[i] == 0) break;
+        }
+        ssid[32] = 0;
+        
+        for(int i=0; i<63; i++){
+            password[i] = EEPROM.read(m_baseAddress + 1 + 33 + i);
+            if(password[i] == 0) break;
+        }
+        password[63] = 0;
+        
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+// AP設定をEEPROMに書き込む(STAモードで使用)
+void WebUI::saveApSettings(const char* ssid, const char* password)
+{
+    // オフセットアドレス0にマジックワードが書かれていなければ書く
+    if(EEPROM.read(m_baseAddress+0) != 0xA5)
+    {
+        EEPROM.write(m_baseAddress+0, 0xA5);
+    }
+    // データ書き込み
+    for(int i=0; i<33; i++){
+        EEPROM.write(m_baseAddress + 1 + i, ssid[i]);
+    }
+    for(int i=0; i<64; i++){
+        EEPROM.write(m_baseAddress + 1 + 33 + i, password[i]);
+    }
+    
+    EEPROM.commit(); // 忘れずに！
 }

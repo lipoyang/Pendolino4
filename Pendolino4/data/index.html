@@ -58,82 +58,84 @@
     IMUセンサのキャリブレーション 
     <input type='button' id='calib_button' value="START" onclick="clickButton(this)" ></input>
 </form>
+<br>
+<button type=“button” onclick="location.href='ap_settings.html'">アクセスポイントの設定</button>
 
 <script>
-      function changeSliderPosition(element) {
+  function changeSliderPosition(element) {
 
-        if(element.id=='K1_slider') {
-          document.getElementById("val_K1").innerHTML = element.value;
-          sendRequest("?K1=" + element.value);
-        }
-        if(element.id=='K2_slider') {
-          document.getElementById("val_K2").innerHTML = element.value;
-          sendRequest("?K2=" + element.value);
-        }
-        if(element.id=='K3_slider') {
-          document.getElementById("val_K3").innerHTML = element.value;
-          sendRequest("?K3=" + element.value);
-        }
-        if(element.id=='K4_slider') {
-          document.getElementById("val_K4").innerHTML = element.value;
-          sendRequest("?K4=" + element.value);
-        }
-        if(element.id=='theta0_slider') {
-          document.getElementById("val_theta0").innerHTML = element.value;
-          sendRequest("?theta0=" + element.value);
-        }
-      }
+    if(element.id=='K1_slider') {
+      document.getElementById("val_K1").innerHTML = element.value;
+      sendRequest("?K1=" + element.value);
+    }
+    if(element.id=='K2_slider') {
+      document.getElementById("val_K2").innerHTML = element.value;
+      sendRequest("?K2=" + element.value);
+    }
+    if(element.id=='K3_slider') {
+      document.getElementById("val_K3").innerHTML = element.value;
+      sendRequest("?K3=" + element.value);
+    }
+    if(element.id=='K4_slider') {
+      document.getElementById("val_K4").innerHTML = element.value;
+      sendRequest("?K4=" + element.value);
+    }
+    if(element.id=='theta0_slider') {
+      document.getElementById("val_theta0").innerHTML = element.value;
+      sendRequest("?theta0=" + element.value);
+    }
+  }
 
-      function clickButton(element) {
-        if(element.id=='load_button') {
-          sendRequestLoad("?load=1");
-        }
-        if(element.id=='save_button') {
-          sendRequest("?save=1");
-        }
-        if(element.id=='on_button') {
-          sendRequest("?ctrl_on=1");
-        }
-        if(element.id=='off_button') {
-          sendRequest("?ctrl_on=0");
-        }
-        if(element.id=='calib_button') {
-          sendRequest("?calib=1");
-        }
-      }
-  
-      function sendRequest(str) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', str, true); 
-        xhr.send();
-      }
+  function clickButton(element) {
+    if(element.id=='load_button') {
+      sendRequestLoad("?load=1");
+    }
+    if(element.id=='save_button') {
+      sendRequest("?save=1");
+    }
+    if(element.id=='on_button') {
+      sendRequest("?ctrl_on=1");
+    }
+    if(element.id=='off_button') {
+      sendRequest("?ctrl_on=0");
+    }
+    if(element.id=='calib_button') {
+      sendRequest("?calib=1");
+    }
+  }
 
-      function sendRequestLoad(str) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            var domDoc = this.responseXML;
-            // console.log("xml=" + domDoc);
-            var K1 = parseFloat(domDoc.getElementsByTagName('K1')[0].childNodes[0].nodeValue);
-            var K2 = parseFloat(domDoc.getElementsByTagName('K2')[0].childNodes[0].nodeValue);
-            var K3 = parseFloat(domDoc.getElementsByTagName('K3')[0].childNodes[0].nodeValue);
-            var K4 = parseFloat(domDoc.getElementsByTagName('K4')[0].childNodes[0].nodeValue);
-            var theta0 = parseFloat(domDoc.getElementsByTagName('theta0')[0].childNodes[0].nodeValue);
-            document.getElementById("val_K1").innerHTML = K1.toFixed(0);
-            document.getElementById("val_K2").innerHTML = K2.toFixed(0);
-            document.getElementById("val_K3").innerHTML = K3.toFixed(0);
-            document.getElementById("val_K4").innerHTML = K4.toFixed(0);
-            document.getElementById("val_theta0").innerHTML = theta0.toFixed(1);
-            document.getElementById('K1_slider').value = K1;
-            document.getElementById('K2_slider').value = K2;
-            document.getElementById('K3_slider').value = K3;
-            document.getElementById('K4_slider').value = K4;
-            document.getElementById('theta0_slider').value = theta0;
-          }
-        };
-        xhr.open('GET', str, true); 
-        xhr.send();
+  function sendRequest(str) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', str, true); 
+    xhr.send();
+  }
+
+  function sendRequestLoad(str) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var domDoc = this.responseXML;
+        // console.log("xml=" + domDoc);
+        var K1 = parseFloat(domDoc.getElementsByTagName('K1')[0].childNodes[0].nodeValue);
+        var K2 = parseFloat(domDoc.getElementsByTagName('K2')[0].childNodes[0].nodeValue);
+        var K3 = parseFloat(domDoc.getElementsByTagName('K3')[0].childNodes[0].nodeValue);
+        var K4 = parseFloat(domDoc.getElementsByTagName('K4')[0].childNodes[0].nodeValue);
+        var theta0 = parseFloat(domDoc.getElementsByTagName('theta0')[0].childNodes[0].nodeValue);
+        document.getElementById("val_K1").innerHTML = K1.toFixed(0);
+        document.getElementById("val_K2").innerHTML = K2.toFixed(0);
+        document.getElementById("val_K3").innerHTML = K3.toFixed(0);
+        document.getElementById("val_K4").innerHTML = K4.toFixed(0);
+        document.getElementById("val_theta0").innerHTML = theta0.toFixed(1);
+        document.getElementById('K1_slider').value = K1;
+        document.getElementById('K2_slider').value = K2;
+        document.getElementById('K3_slider').value = K3;
+        document.getElementById('K4_slider').value = K4;
+        document.getElementById('theta0_slider').value = theta0;
       }
+    };
+    xhr.open('GET', str, true); 
+    xhr.send();
+  }
 </script>
 
 </body>

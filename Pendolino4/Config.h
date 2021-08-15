@@ -21,14 +21,17 @@
 // EEPROMのメモリマップ
 #define EEP_IMU_CALIB   0x0000  // IMUセンサのキャリブレーションデータ
 #define EEP_CTRL_PARAM  0x0020  // 倒立振子の制御パラメータ
+#define EEP_AP_SETTINGS 0x0040  // アクセスポイントの設定 (STAモード用)
 
 // WiFi接続のパスワード (APモードの場合)
 // (SSIDは pendolino-xxxxxx となる。xxxxxxの部分はボード固有)
 #define MY_PASS     "12345678"
 
+#if 0
 // WiFi接続のSSIDとパスワード (STAモードの場合)
 #define AP_SSID     "SSID"
 #define AP_PASS     "PASSWORD"
+#endif
 
 // ALGYAN 6th IoT基板のホスト名
 #define MY_HOST_NAME "pendolino4"

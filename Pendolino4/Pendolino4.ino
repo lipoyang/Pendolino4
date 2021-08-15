@@ -29,7 +29,7 @@ DcMotor_DRV8835 motor_R(PIN_MOTOR_BIN1, PIN_MOTOR_BIN2,
 // 制御パラメータのストレージ
 CtrlParameter parameter(EEP_CTRL_PARAM);
 // Web UI
-WebUI webUI;
+WebUI webUI(EEP_AP_SETTINGS);
 // スイッチ・LED
 BoardIO boardIO;
 
@@ -56,8 +56,8 @@ void setup()
     // スイッチとLEDの初期化
     boardIO.begin();
     
-    // EEPROMの初期化 (128バイト確保)
-    EEPROM.begin(128);
+    // EEPROMの初期化 (256バイト確保)
+    EEPROM.begin(256);
     
     // IMUセンサの初期化
     Wire.begin();
@@ -71,7 +71,7 @@ void setup()
     // 制御パラメータ読み出し
     parameter.read(ka, kb, kc, kd, theta0);
     
-    // UDP通信の設定 (起動時にSW3が押されていればAPモード)
+    // WiFiの設定 (起動時にSW3が押されていればAPモード)
     if(boardIO.pushed(SW3)){
         boardIO.turnOn(LED_GREEN);
         
@@ -81,8 +81,14 @@ void setup()
         while(boardIO.pushed(SW3)){;}
         boardIO.turnOff(LED_GREEN);
     }else{
-        // STAモード
-        webUI.beginSTA(AP_SSID, AP_PASS, MY_HOST_NAME); 
+        char ssid[33], password[64];
+        if(webUI.loadApSettings(ssid, password)){
+            // STAモード
+            webUI.beginSTA(ssid, password, MY_HOST_NAME);
+        }else{
+            // 接続するAPが未設定ならAPモード
+            webUI.beginAP(NULL, MY_PASS, MY_HOST_NAME);
+        }
     }
     
     // 制御周期の初期化

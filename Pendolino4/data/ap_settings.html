@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>STAモード時のアクセスポイント設定</title>
+
+<html>
+<body style='background:white; color:black; font-size:120%;'>
+
+<h2>STAモード時のアクセスポイント設定</h2>
+<form method='post'>
+  <h3>SSIDとパスワードの設定</h3>
+    <table>
+      <tr>
+        <td>SSID</td>
+        <td><input type='text' name='ap_ssid' value='' style='width:16em;'/></td>
+      </tr>
+      <tr>
+        <td>パスワード</td>
+        <td><input type='password' name='ap_password' value='' style='width:16em;'/></td>
+      </tr>
+      <tr>
+        <td>設定</td>
+        <td><input type='submit' id='save_button' value="SAVE" /></td>
+      </tr>
+    </table>
+</form>
+<br>
+<button type=“button” onclick="location.href='index.html'">パラメータ調整に戻る</button>
+
+</body>
+</html>
