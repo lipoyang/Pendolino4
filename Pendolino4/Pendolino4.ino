@@ -11,7 +11,7 @@ float theta_a;          // 加速度による推定姿勢角 θa [deg]
 float theta;            // 相補フィルタによる推定姿勢角 θ [deg]
 float v;                // 推定速度 v (出力電圧に比例すると仮定)
 float x;                // 推定位置 x [cm]
-float ka, kb, kc, kd;   // 制御則の係数 ka, kb, kc, kd
+float K1, K2, K3, K4;   // 制御則の係数 K1, K2, K3, K4
 float theta0;           // 姿勢角のオフセット(平衡点の角度)
 int   t = 0;            // 経過時刻(ログ用) [msec]
 
@@ -69,7 +69,7 @@ void setup()
     motor_R.begin();
     
     // 制御パラメータ読み出し
-    parameter.read(ka, kb, kc, kd, theta0);
+    parameter.read(K1, K2, K3, K4, theta0);
     
     // WiFiの設定 (起動時にSW3が押されていればAPモード)
     if(boardIO.pushed(SW3)){
@@ -164,16 +164,16 @@ void ctrl_task(void *param)
         }
         
         // 制御則
-        // u = ka*(θ-θ0) + kb*ω + kc*x + kd*v
+        // u = K1*(θ-θ0) + K2*ω + K3*x + K4*v
         float a,b,d,c;
         if(resetCtrl && (abs(theta - theta0) > 1)){
             a = b = c= d = 0;
         }else{
             resetCtrl = false;
-            a = ka * (theta - theta0);
-            b = kb * omega;
-            c = kc * (x / 100);
-            d = kd * (v / 100);
+            a = K1 * (theta - theta0);
+            b = K2 * omega;
+            c = K3 * (x / 100);
+            d = K4 * (v / 100);
         }
         int u = (int)(a+b+c+d);
         

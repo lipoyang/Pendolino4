@@ -35,33 +35,33 @@ CtrlParameter::CtrlParameter(int baseAddress)
 }
 
 // パラメータ読み出し
-void CtrlParameter::read(float& ka, float& kb, float& kc, float& kd, float& theta0)
+void CtrlParameter::read(float& K1, float& K2, float& K3, float& K4, float& theta0)
 {
     // オフセットアドレス0にマジックワードが書かれていたら
     // 有効なデータがあると判断して読み出す
     if(EEPROM.read(m_baseAddress+0) == 0xA5)
     {
-        ka     = eeprom_read_float(m_baseAddress+4);
-        kb     = eeprom_read_float(m_baseAddress+8);
-        kc     = eeprom_read_float(m_baseAddress+12);
-        kd     = eeprom_read_float(m_baseAddress+16);
+        K1     = eeprom_read_float(m_baseAddress+4);
+        K2     = eeprom_read_float(m_baseAddress+8);
+        K3     = eeprom_read_float(m_baseAddress+12);
+        K4     = eeprom_read_float(m_baseAddress+16);
         theta0 = eeprom_read_float(m_baseAddress+20);
     }
     // 有効なデータが無いならゼロでリセットし、
     // EEPROMにも保存する
     else
     {
-        ka     = 0;
-        kb     = 0;
-        kc     = 0;
-        kd     = 0;
+        K1     = 0;
+        K2     = 0;
+        K3     = 0;
+        K4     = 0;
         theta0 = 0;
-        this->write(ka, kb, kc, kd, theta0);
+        this->write(K1, K2, K3, K4, theta0);
     }
 }
 
 // パラメータ書き込み
-void CtrlParameter::write(float ka, float kb, float kc, float kd, float theta0)
+void CtrlParameter::write(float K1, float K2, float K3, float K4, float theta0)
 {
     // オフセットアドレス0にマジックワードが書かれていなければ書く
     if(EEPROM.read(m_baseAddress+0) != 0xA5)
@@ -69,10 +69,10 @@ void CtrlParameter::write(float ka, float kb, float kc, float kd, float theta0)
         EEPROM.write(m_baseAddress+0, 0xA5);
     }
     // データ書き込み
-    eeprom_write_float(m_baseAddress+4,  ka);
-    eeprom_write_float(m_baseAddress+8,  kb);
-    eeprom_write_float(m_baseAddress+12, kc);
-    eeprom_write_float(m_baseAddress+16, kd);
+    eeprom_write_float(m_baseAddress+4,  K1);
+    eeprom_write_float(m_baseAddress+8,  K2);
+    eeprom_write_float(m_baseAddress+12, K3);
+    eeprom_write_float(m_baseAddress+16, K4);
     eeprom_write_float(m_baseAddress+20, theta0);
     
     EEPROM.commit(); // 忘れずに！

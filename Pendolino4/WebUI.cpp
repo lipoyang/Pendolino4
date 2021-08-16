@@ -10,8 +10,11 @@
 #include "WebUI.h"
 
 // 外部変数
+#include "Config.h"
 #include "CtrlParameter.h"
+#include "BoardIO.h"
 extern CtrlParameter parameter; // 制御パラメータのストレージ
+extern BoardIO boardIO;         // スイッチ・LED
 extern bool resetTheta;     // 角度推定のリセットフラグ
 extern bool resetCtrl;      // 制御則のリセットフラグ
 extern bool resetPos;       // 位置推定のリセットフラグ
@@ -20,7 +23,7 @@ extern bool requestCalib;   // キャリブレーション要求フラグ
 extern float theta;         // 相補フィルタによる推定姿勢角 θ [deg]
 extern float v;             // 推定速度 v (出力電圧に比例すると仮定)
 extern float x;             // 推定位置 x [cm]
-extern float ka, kb, kc, kd;   // 制御則の係数 ka, kb, kc, kd
+extern float K1, K2, K3, K4;   // 制御則の係数 K1, K2, K3, K4
 extern float theta0;           // 姿勢角のオフセット(平衡点の角度)
 
 // 排他制御用
@@ -47,7 +50,8 @@ static bool getParameter(const String& name, float& val)
 // "/" へのアクセスの処理
 static void handleRoot()
 {
-    Serial.println("handleRoot");
+    boardIO.blinkOnce(LED_GREEN);
+    //Serial.println("handleRoot");
     
     // リクエストパラメータがある場合
     if(webServer.args() > 0)
@@ -57,25 +61,25 @@ static void handleRoot()
         // kaの設定
         if(getParameter("K1", val)){
             _LOCK();
-            ka = val;
+            K1 = val;
             _UNLOCK();
         }
         // kbの設定
         if(getParameter("K2", val)){
             _LOCK();
-            kb = val;
+            K2 = val;
             _UNLOCK();
         }
         // kcの設定
         if(getParameter("K3", val)){
             _LOCK();
-            kc = val;
+            K3 = val;
             _UNLOCK();
         }
         // kdの設定
         if(getParameter("K4", val)){
             _LOCK();
-            kd = val;
+            K4 = val;
             _UNLOCK();
         }
         // θ0の設定
@@ -88,23 +92,23 @@ static void handleRoot()
         if(getParameter("load", val)){
             if(val == 1){
                 // リロード
-                float _k1, _k2, _k3, _k4, _theta0;
-                parameter.read(_k1, _k2, _k3, _k4, _theta0);
+                float _K1, _K2, _K3, _K4, _theta0;
+                parameter.read(_K1, _K2, _K3, _K4, _theta0);
                 _LOCK();
-                ka = _k1;
-                kb = _k2;
-                kc = _k3;
-                kd = _k4;
+                K1 = _K1;
+                K2 = _K2;
+                K3 = _K3;
+                K4 = _K4;
                 theta0 = _theta0;
-               _UNLOCK();
+                _UNLOCK();
                 Serial.println("Parameters loaded!");
                 // 値をブラウザに送る
                 String message  = "<?xml version = \"1.0\" ?>";
                        message += "<values>";
-                       message += "<K1>" + String(ka) + "</K1>";
-                       message += "<K2>" + String(kb) + "</K2>";
-                       message += "<K3>" + String(kc) + "</K3>";
-                       message += "<K4>" + String(kd) + "</K4>";
+                       message += "<K1>" + String(K1) + "</K1>";
+                       message += "<K2>" + String(K2) + "</K2>";
+                       message += "<K3>" + String(K3) + "</K3>";
+                       message += "<K4>" + String(K4) + "</K4>";
                        message += "<theta0>" + String(theta0) + "</theta0>";
                        message += "</values>";
                 webServer.sendHeader("Cache-Control", "no-cache");
@@ -114,7 +118,7 @@ static void handleRoot()
         // パラメータのセーブ
         if(getParameter("save", val)){
             if(val == 1){
-                parameter.write(ka, kb, kc, kd, theta0);
+                parameter.write(K1, K2, K3, K4, theta0);
                 Serial.println("Parameters saved!");
             }
         }
@@ -161,6 +165,7 @@ static void handleRoot()
 // "/ap_settings.html" へのアクセスの処理
 static void handleApSettings()
 {
+    boardIO.blinkOnce(LED_GREEN);
     Serial.println("handleApSettings");
     
     if (webServer.method() == HTTP_POST)
@@ -182,6 +187,8 @@ static void handleApSettings()
 // 401 Not Found の処理
 static void handleNotFound()
 {
+    boardIO.blinkOnce(LED_GREEN);
+    
     String message = "File Not Found\n\n";
     message += "URI: ";
     message += webServer.uri();
@@ -215,26 +222,46 @@ void WebUI::beginAP(char* ssid, char* password, char* hostName)
     
     // SSID文字列
     if(ssid == NULL){
-        sprintf(this->mySSID, "pendolino-%06x", ESP.getEfuseMac());
+        sprintf(mySSID, "esp32-%06x", ESP.getEfuseMac());
     }else{
         strncpy(mySSID, ssid, sizeof(mySSID)-1);
         mySSID[sizeof(mySSID)-1] = '\0';
     }
+    Serial.println("AP MODE");
+    Serial.print("AP SSID: "); Serial.println(mySSID);
+    
     // パスワード文字列
     strncpy(myPassword, password, sizeof(myPassword)-1);
     myPassword[sizeof(myPassword)-1] = '\0';
     
+    // ホスト名文字列
+    if(hostName == NULL){
+        sprintf(this->hostName, "esp32-%06x", ESP.getEfuseMac());
+    }else{
+        strncpy(this->hostName, hostName, sizeof(this->hostName)-1);
+        this->hostName[sizeof(this->hostName)-1] = '\0';
+    }
+    Serial.print("HostName: ");  Serial.println(hostName);
+    
     // APの設定
     WiFi.mode(WIFI_AP);
     WiFi.softAP(mySSID, myPassword);
-    localIP = WiFi.softAPIP();
-    Serial.println();
-    Serial.print("AP SSID: ");Serial.println(mySSID);
+    IPAddress localIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");Serial.println(localIP);
     
+#ifdef USE_CAPTIVE_PORTAL
     // DNSサーバ開始
     // Captive Portal (すべてのアクセスを横取りして自分に仕向ける)
     dnsServer.start(53, "*", localIP);
+#else
+    // mDNSを開始
+    if ( MDNS.begin ( hostName ) ) {
+        Serial.println ( "MDNS responder started" );
+        Serial.print("HostName: ");  Serial.println(hostName);
+    }else{
+        Serial.println("Error setting up MDNS responder!");
+    }
+#endif
     
     // SPIFFSの開始 (内蔵Flashファイルシステム)
     SPIFFS.begin();
@@ -256,10 +283,13 @@ void WebUI::beginSTA(char* ssid, char* password, char* hostName)
     // SSID文字列
     strncpy(hisSSID, ssid, sizeof(hisSSID)-1);
     hisSSID[sizeof(hisSSID)-1] = '\0';
+    Serial.println("STA MODE");
     Serial.print("AP SSID: ");Serial.println(hisSSID);
+    
     // パスワード文字列
     strncpy(hisPassword, password, sizeof(hisPassword)-1);
     hisPassword[sizeof(hisPassword)-1] = '\0';
+    
     // ホスト名文字列
     if(hostName == NULL){
         sprintf(this->hostName, "esp32-%06x", ESP.getEfuseMac());
@@ -298,8 +328,10 @@ void WebUI::loop()
 // 周期処理 (APモード)
 void WebUI::loopAP()
 {
+#ifdef USE_CAPTIVE_PORTAL
     // DNSサーバの処理
     dnsServer.processNextRequest();
+#endif
     // Webサーバの処理
     webServer.handleClient();
 }
@@ -323,13 +355,13 @@ void WebUI::loopSTA()
             isConnected = true;
             
             // 自分のIPアドレスを取得
-            localIP = WiFi.localIP();
+            IPAddress localIP = WiFi.localIP();
             Serial.print("Connected to "); Serial.println(hisSSID);
             Serial.print("STA IP address: "); Serial.println(localIP);
             
             // mDNSを開始
             if ( MDNS.begin ( hostName ) ) {
-                Serial.println ( "MDNS responder started" );
+                Serial.println ( "mDNS responder started" );
                 Serial.print("HostName: ");  Serial.println(hostName);
             }else{
                 Serial.println("Error setting up MDNS responder!");

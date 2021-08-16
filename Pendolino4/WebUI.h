@@ -30,8 +30,6 @@ public:
     // APのSSIDとpassword (STAモードで使用)
     char hisSSID[33];
     char hisPassword[64];
-    // 自分(Webサーバ)のIPアドレス
-    IPAddress localIP;
     // 自分のホスト名
     char hostName[32];
     

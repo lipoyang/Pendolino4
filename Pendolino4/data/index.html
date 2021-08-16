@@ -136,6 +136,10 @@
     xhr.open('GET', str, true); 
     xhr.send();
   }
+
+  window.onload = function() {
+    sendRequestLoad("?load=1");
+  };
 </script>
 
 </body>

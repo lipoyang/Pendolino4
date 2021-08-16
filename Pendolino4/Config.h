@@ -35,3 +35,8 @@
 
 // ALGYAN 6th IoT基板のホスト名
 #define MY_HOST_NAME "pendolino4"
+
+// WiFiがAPモードのときCaptieve Portalを有効にする
+// (Webアクセスを全て横取りして自分のページを表示させる)
+#define USE_CAPTIVE_PORTAL
+
