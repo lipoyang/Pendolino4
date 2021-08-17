@@ -50,7 +50,7 @@ ALGYAN 6th IoT基板を使用します。 他のESP32搭載ボードも同等の
 - STAモードで起動した場合、http://pendolino4.local/ にアクセスして設定画面を開きます。
 - このページで制御パラメータ θ0, K1, K2, K3, K4 を調整します。
 
-<a target="_blank" href="images/page.png">
+<a target="_blank" rel="noopener noreferrer" href="images/page.png">
 <img src="images/page.png" alt="スクリーンショット" width="480">
 </a>
 
