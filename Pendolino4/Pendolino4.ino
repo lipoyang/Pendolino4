@@ -7,13 +7,11 @@ const TickType_t DELTA_T_TICK = DELTA_T_MSEC / portTICK_PERIOD_MS; //[tick]
 TickType_t       last_time; // 前回の制御周期の時刻[tick]
 
 // 倒立振子制御の変数
-float theta_a;          // 加速度による推定姿勢角 θa [deg]
 float theta;            // 相補フィルタによる推定姿勢角 θ [deg]
 float v;                // 推定速度 v (出力電圧に比例すると仮定)
 float x;                // 推定位置 x [cm]
 float K1, K2, K3, K4;   // 制御則の係数 K1, K2, K3, K4
 float theta0;           // 姿勢角のオフセット(平衡点の角度)
-int   t = 0;            // 経過時刻(ログ用) [msec]
 
 // 6軸IMUセンサ
 Imu_MPU6050 imu;
@@ -176,6 +174,7 @@ void ctrl_task(void *param)
             d = K4 * (v / 100);
         }
         int u = (int)(a+b+c+d);
+        u = CLIP(u, -255, +255);
         
         // 速度と位置の推定
         v = u;          // 速度は電圧に比例すると仮定
@@ -196,7 +195,7 @@ void ctrl_task(void *param)
         //----------------------------------------------- 制御のキモ ここまで
         
         // 暴走対策
-        if( (abs(u) >= 128) && runawayCnt.count() ){
+        if( (abs(u) >= 255) && runawayCnt.count() ){
             isCtrlOn = false;
         }
         
@@ -207,25 +206,15 @@ void ctrl_task(void *param)
             //    imu.ax, imu.ay, imu.az, imu.gx ,imu.gy , imu.gz, theta_a, theta);
             //Serial.println(txbuff);
             
+            static const char FORMAT[] = 
+                R"RAW({"theta":%.1f, "omega":%.1f, "x":%.1f, "v":%.1f, "PWM":%.1f})RAW";
             if(isCtrlOn){
-                sprintf(txbuff, "#d%04X%04X%04X%04X%04X%04X$", 
-                    t&0xFFFF,
-                    (signed short)((theta - theta0)*100)&0xFFFF,
-                    (signed short)(omega*100)&0xFFFF,
-                    (signed short)(x*100)&0xFFFF,
-                    (signed short)(v*100)&0xFFFF,
-                    u&0xFFFF);
+                sprintf(txbuff, FORMAT, theta - theta0, omega, x, v, (float)u/255.0f);
             }else{
-                sprintf(txbuff, "#d%04X%04X%04X%04X%04X%04X$", 
-                    t&0xFFFF,
-                    (signed short)(theta*100)&0xFFFF,
-                    0,0,0,0);
+                sprintf(txbuff, FORMAT, theta,          omega, 0.0f, 0.0f, 0.0f);
             }
-            //webUI.send(txbuff);
+            webUI.send(txbuff);
         }
-        
-        // 時刻経過
-        t += DELTA_T_MSEC;
         
         //digitalWrite(PIN_TEST, LOW);
         _UNLOCK();

@@ -9,3 +9,6 @@
 #include "CtrlParameter.h"
 #include "BoardIO.h"
 #include "Config.h"
+
+// 数値のクリップ
+#define CLIP(val, min, max)  ((val < min) ? min : ((val > max) ? max : val))

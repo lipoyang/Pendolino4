@@ -3,11 +3,15 @@
 #include <ESPmDNS.h>
 #include <DNSServer.h>
 #include <WebServer.h>
+#include <WebSocketsServer.h>
 #include <FS.h>
 #include <SPIFFS.h>
 #include <EEPROM.h>
 
 #include "WebUI.h"
+
+// 送信データサイズ
+#define TX_BUFF_SIZE    90
 
 // 外部変数
 #include "Config.h"
@@ -28,9 +32,13 @@ extern float theta0;           // 姿勢角のオフセット(平衡点の角度
 
 // 排他制御用
 SemaphoreHandle_t mutex;
+// 送信データのキュー
+static QueueHandle_t txQueue;
 
 // Webサーバ
 static WebServer webServer(80);
+// WebSocketサーバ
+static WebSocketsServer webSocket(81);
 // DNSサーバ
 static DNSServer dnsServer;
 // WebUI (このクラス)
@@ -213,6 +221,8 @@ WebUI::WebUI(int baseAddress)
     
     // 排他制御の初期化
     mutex = xSemaphoreCreateMutex();
+    // 送信キューの初期化
+    txQueue = xQueueCreate(4, TX_BUFF_SIZE);
 }
 
 // APモードでWiFiを開始する
@@ -272,6 +282,8 @@ void WebUI::beginAP(char* ssid, char* password, char* hostName)
     webServer.on("/ap_settings.html", handleApSettings);
     webServer.onNotFound(handleRoot); // その他全て "/" にリダイレクト
     webServer.begin();
+    // WebSocketサーバの開始
+    webSocket.begin();
 }
 
 // STAモードでWiFiを開始する
@@ -312,6 +324,8 @@ void WebUI::beginSTA(char* ssid, char* password, char* hostName)
     webServer.on("/ap_settings.html", handleApSettings);
     webServer.onNotFound(handleNotFound);
     webServer.begin();
+    // WebSocketサーバの開始
+    webSocket.begin();
 }
 
 // ループ処理 (Arduinoタスク の loop()から呼ぶ)
@@ -334,6 +348,14 @@ void WebUI::loopAP()
 #endif
     // Webサーバの処理
     webServer.handleClient();
+    // WebSocketサーバの処理
+    webSocket.loop();
+    static char txbuff[TX_BUFF_SIZE];
+    BaseType_t result = xQueueReceive(txQueue, txbuff, 0);
+    if ( result == pdTRUE)
+    {
+        webSocket.broadcastTXT(txbuff, strlen(txbuff));
+    }
 }
 
 // 周期処理 (STAモード)
@@ -364,26 +386,31 @@ void WebUI::loopSTA()
                 Serial.println ( "mDNS responder started" );
                 Serial.print("HostName: ");  Serial.println(hostName);
             }else{
-                Serial.println("Error setting up MDNS responder!");
+                Serial.println("Error: setting up MDNS responder!");
             }
         }
         // Webサーバの処理
         webServer.handleClient();
+        // WebSocketサーバの処理
+        webSocket.loop();
+        static char txbuff[TX_BUFF_SIZE];
+        BaseType_t result = xQueueReceive(txQueue, txbuff, 0);
+        if ( result == pdTRUE)
+        {
+            webSocket.broadcastTXT(txbuff, strlen(txbuff));
+        }
     }
 }
 
-#if 0
-// send data
+// データを送信する
 void WebUI::send(char* data)
 {
-    if(remoteIP != NULL_ADDR){
-        udp.beginPacket(remoteIP, remotePort);
-        udp.write((uint8_t*)data, strlen(data));
-        udp.endPacket();
-        //Serial.println(data);
+    BaseType_t result = xQueueSendToBack(txQueue, data, 0);
+    
+    if(result != pdTRUE){
+        Serial.println("Error: TX Queue is Busy!");
     }
 }
-#endif
 
 // APに接続されたか? (STAモードで使用)
 bool WebUI::isReady()

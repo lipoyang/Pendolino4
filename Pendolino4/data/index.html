@@ -9,56 +9,86 @@
 #text_K3 {color: green;}
 #text_K4 {color: blue;}
 #text_theta0 {color: black;}
+body {
+  background:white;
+  color:black;
+  font-size: 12pt;
+}
+h1 {
+    border-left: 9px solid #ff9c00;
+    margin: 0 0 0.5em 0;
+    padding: 5px 0 0 10px;
+    font-size: 120%;
+}
+td{
+  width: 4em;
+}
 </style>
 </head>
 
 <html>
-<body style='background:white; color:black; font-size:120%;'>
+<body>
 
 <form method='get'>
 
-<h2>倒立振子 パラメータ調整</h2>
+  <h1>制御パラメータ</h1>
 
-  <h3>制御パラメータ</h3>
+  <span id='text_K1'>K1</span>
+  <input type='range' min='0' max='1000' step = '1' class='slider' id='K1_slider' value=0 
+      oninput='changeSliderPosition(this)' style='width:25em;'/>
+  <span id='val_K1'>0</span><BR>
+  
+  <span id='text_K2'>K2</span> 
+  <input type='range' min='0' max='1000' step = '1' class='slider' id='K2_slider' value=0
+      oninput='changeSliderPosition(this)' style='width:25em;'/>
+  <span id='val_K2'>0</span><BR>
+  
+  <span id='text_K3'>K3</span>
+  <input type='range' min='0' max='1000' step = '1' class='slider' id='K3_slider' value=0
+      oninput='changeSliderPosition(this)' style='width:25em;'/>
+  <span id='val_K3'>0</span><BR>
+  
+  <span id='text_K4'>K4</span>
+  <input type='range' min='0' max='1000' step = '1' class='slider' id='K4_slider' value=0 
+      oninput='changeSliderPosition(this)' style='width:25em;'/>
+  <span id='val_K4'>0</span><BR>
+  
+  <span id='text_theta0'>θ0</span>
+  <input type='range' min='-30' max='30' step = '0.1' class='slider' id='theta0_slider' value=0 
+      oninput='changeSliderPosition(this)' style='width:25em;'/>
+  <span id='val_theta0'>0</span><BR>
+  
+  EEPROM 
+  <input type='button' id='load_button' value="LOAD" onclick="clickButton(this)" ></input>
+  <input type='button' id='save_button' value="SAVE" onclick="clickButton(this)" ></input>
+  <br><br>
 
-    <span id='text_K1'>K1</span>
-    <input type='range' min='0' max='1000' step = '1' class='slider' id='K1_slider' value=0 
-        oninput='changeSliderPosition(this)' style='width:25em;'/>
-    <span id='val_K1'>0</span><BR>
-    
-    <span id='text_K2'>K2</span> 
-    <input type='range' min='0' max='1000' step = '1' class='slider' id='K2_slider' value=0
-        oninput='changeSliderPosition(this)' style='width:25em;'/>
-    <span id='val_K2'>0</span><BR>
-    
-    <span id='text_K3'>K3</span>
-    <input type='range' min='0' max='1000' step = '1' class='slider' id='K3_slider' value=0
-        oninput='changeSliderPosition(this)' style='width:25em;'/>
-    <span id='val_K3'>0</span><BR>
-    
-    <span id='text_K4'>K4</span>
-    <input type='range' min='0' max='1000' step = '1' class='slider' id='K4_slider' value=0 
-        oninput='changeSliderPosition(this)' style='width:25em;'/>
-    <span id='val_K4'>0</span><BR>
-    
-    <span id='text_theta0'>θ0</span>
-    <input type='range' min='-30' max='30' step = '0.1' class='slider' id='theta0_slider' value=0 
-        oninput='changeSliderPosition(this)' style='width:25em;'/>
-    <span id='val_theta0'>0</span><BR>
-    
-    EEPROM 
-    <input type='button' id='load_button' value="LOAD" onclick="clickButton(this)" ></input>
-    <input type='button' id='save_button' value="SAVE" onclick="clickButton(this)" ></input>
-
-  <h3>動作</h3>
-    制御 
-    <input type='button' id='on_button' value="ON" onclick="clickButton(this)" ></input>
-    <input type='button' id='off_button' value="OFF" onclick="clickButton(this)" ></input>
-    <BR>
-    IMUセンサのキャリブレーション 
-    <input type='button' id='calib_button' value="START" onclick="clickButton(this)" ></input>
+  <h1>動作</h1>
+  制御 
+  <input type='button' id='on_button' value="ON" onclick="clickButton(this)" ></input>
+  <input type='button' id='off_button' value="OFF" onclick="clickButton(this)" ></input>
+  <BR>
+  IMUセンサのキャリブレーション 
+  <input type='button' id='calib_button' value="START" onclick="clickButton(this)" ></input>
 </form>
 <br>
+
+<h1>モニタ</h1>
+<table>
+  <tr>
+    <td>θ</td><td>ω</td><td>x</td><td>v</td><td>τ</td>
+  </tr>
+  <tr>
+    <td id='theta_val'>0.0</td>
+    <td id='omega_val'>0.0</td>
+    <td id='x_val'>0.0</td>
+    <td id='v_val'>0.0</td>
+    <td id='PWM_val'>0.0</td>
+  </tr>
+</table>
+<br>
+
+<h1>WiFi</h1>
 <button type=“button” onclick="location.href='ap_settings.html'">アクセスポイントの設定</button>
 
 <script>
@@ -139,6 +169,22 @@
 
   window.onload = function() {
     sendRequestLoad("?load=1");
+
+    var ws = new WebSocket('ws://pendolino4.local:81');
+    ws.onmessage = function(evt){
+      //cosole.log("json=" + evt.data);
+      document.getElementById("theta_val").innerHTML = JSON.parse(evt.data)['theta'].toFixed(1);
+      document.getElementById("omega_val").innerHTML = JSON.parse(evt.data)['omega'].toFixed(1);
+      document.getElementById("x_val").innerHTML     = JSON.parse(evt.data)['x'].toFixed(1);
+      document.getElementById("v_val").innerHTML     = JSON.parse(evt.data)['v'].toFixed(1);
+      document.getElementById("PWM_val").innerHTML   = JSON.parse(evt.data)['PWM'].toFixed(1);
+    }
+    ws.onopen = function () {
+      console.log('WebSocket Connect');
+    };
+    ws.onerror = function (error) {
+      console.log('WebSocket Error ', error);
+    };
   };
 </script>
 
