@@ -405,6 +405,9 @@ void WebUI::loopSTA()
 // データを送信する
 void WebUI::send(char* data)
 {
+    // STAモードでAPに未接続なら送信しない
+    if((mode == WIFI_STA) && !isConnected) return;
+    
     BaseType_t result = xQueueSendToBack(txQueue, data, 0);
     
     if(result != pdTRUE){

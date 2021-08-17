@@ -36,22 +36,22 @@ td{
   <span id='text_K1'>K1</span>
   <input type='range' min='0' max='1000' step = '1' class='slider' id='K1_slider' value=0 
       oninput='changeSliderPosition(this)' style='width:25em;'/>
-  <span id='val_K1'>0</span><BR>
+  <span id='K1_val'>0</span><BR>
   
   <span id='text_K2'>K2</span> 
   <input type='range' min='0' max='1000' step = '1' class='slider' id='K2_slider' value=0
       oninput='changeSliderPosition(this)' style='width:25em;'/>
-  <span id='val_K2'>0</span><BR>
+  <span id='K2_val'>0</span><BR>
   
   <span id='text_K3'>K3</span>
   <input type='range' min='0' max='1000' step = '1' class='slider' id='K3_slider' value=0
       oninput='changeSliderPosition(this)' style='width:25em;'/>
-  <span id='val_K3'>0</span><BR>
+  <span id='K3_val'>0</span><BR>
   
   <span id='text_K4'>K4</span>
   <input type='range' min='0' max='1000' step = '1' class='slider' id='K4_slider' value=0 
       oninput='changeSliderPosition(this)' style='width:25em;'/>
-  <span id='val_K4'>0</span><BR>
+  <span id='K4_val'>0</span><BR>
   
   <span id='text_theta0'>θ0</span>
   <input type='range' min='-30' max='30' step = '0.1' class='slider' id='theta0_slider' value=0 
@@ -76,7 +76,7 @@ td{
 <h1>モニタ</h1>
 <table>
   <tr>
-    <td>θ</td><td>ω</td><td>x</td><td>v</td><td>τ</td>
+    <td>θ</td><td>ω</td><td>x</td><td>v</td><td>PWM</td>
   </tr>
   <tr>
     <td id='theta_val'>0.0</td>
@@ -95,19 +95,19 @@ td{
   function changeSliderPosition(element) {
 
     if(element.id=='K1_slider') {
-      document.getElementById("val_K1").innerHTML = element.value;
+      document.getElementById("K1_val").innerHTML = element.value;
       sendRequest("?K1=" + element.value);
     }
     if(element.id=='K2_slider') {
-      document.getElementById("val_K2").innerHTML = element.value;
+      document.getElementById("K2_val").innerHTML = element.value;
       sendRequest("?K2=" + element.value);
     }
     if(element.id=='K3_slider') {
-      document.getElementById("val_K3").innerHTML = element.value;
+      document.getElementById("K3_val").innerHTML = element.value;
       sendRequest("?K3=" + element.value);
     }
     if(element.id=='K4_slider') {
-      document.getElementById("val_K4").innerHTML = element.value;
+      document.getElementById("K4_val").innerHTML = element.value;
       sendRequest("?K4=" + element.value);
     }
     if(element.id=='theta0_slider') {
@@ -151,10 +151,10 @@ td{
         var K3 = parseFloat(domDoc.getElementsByTagName('K3')[0].childNodes[0].nodeValue);
         var K4 = parseFloat(domDoc.getElementsByTagName('K4')[0].childNodes[0].nodeValue);
         var theta0 = parseFloat(domDoc.getElementsByTagName('theta0')[0].childNodes[0].nodeValue);
-        document.getElementById("val_K1").innerHTML = K1.toFixed(0);
-        document.getElementById("val_K2").innerHTML = K2.toFixed(0);
-        document.getElementById("val_K3").innerHTML = K3.toFixed(0);
-        document.getElementById("val_K4").innerHTML = K4.toFixed(0);
+        document.getElementById("K1_val").innerHTML = K1.toFixed(0);
+        document.getElementById("K2_val").innerHTML = K2.toFixed(0);
+        document.getElementById("K3_val").innerHTML = K3.toFixed(0);
+        document.getElementById("K4_val").innerHTML = K4.toFixed(0);
         document.getElementById("val_theta0").innerHTML = theta0.toFixed(1);
         document.getElementById('K1_slider').value = K1;
         document.getElementById('K2_slider').value = K2;

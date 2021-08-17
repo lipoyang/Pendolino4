@@ -161,7 +161,7 @@ void ctrl_task(void *param)
             theta = k*(theta + omega * DELTA_T) + (1 - k)*(theta_a);
         }
         
-        // 制御則
+        // 制御則 (トルク制御すべきだができないのでPWMによる電圧制御)
         // u = K1*(θ-θ0) + K2*ω + K3*x + K4*v
         float a,b,d,c;
         if(resetCtrl && (abs(theta - theta0) > 1)){
