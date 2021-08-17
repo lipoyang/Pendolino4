@@ -26,6 +26,7 @@ ALGYAN 6th IoT基板を使用します。 他のESP32搭載ボードも同等の
 
 ## ソフトウェア
 - ESP32のソフトウェアはArduinoベース (説明省略)
+- 依存ライブラリ: [arduinoWebSockets](https://github.com/Links2004/arduinoWebSockets)
 - 設定画面のHTMLソースはSPIFFSのアップローダでESP32の内蔵Flashに保存 (説明省略)
 
 ## 動作
@@ -49,7 +50,9 @@ ALGYAN 6th IoT基板を使用します。 他のESP32搭載ボードも同等の
 - STAモードで起動した場合、http://pendolino4.local/ にアクセスして設定画面を開きます。
 - このページで制御パラメータ θ0, K1, K2, K3, K4 を調整します。
 
-<!-- ![写真](image/page.png) -->
+<a target="_blank" href="images/page.png">
+<img src="images/page.png" alt="スクリーンショット" width="480">
+</a>
 
 ## パラメータ調整の手順
 まず、制御をOFFにした状態でIMUセンサのキャリブレーションを行います。
