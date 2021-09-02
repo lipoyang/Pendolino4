@@ -169,16 +169,16 @@ void ctrl_task(void *param)
         }else{
             resetCtrl = false;
             a = K1 * (theta - theta0);
-            b = K2 * omega;
-            c = K3 * (x / 100);
-            d = K4 * (v / 100);
+            b = K2 * omega / 10; // /10, /100, /1000 などは適当な桁調整
+            c = K3 * x / 100;
+            d = K4 * v / 1000;
         }
         int u = (int)(a+b+c+d);
-        u = CLIP(u, -255, +255);
+        u = CLIP(u, -127, +127);
         
         // 速度と位置の推定
         v = u;          // 速度は電圧に比例すると仮定
-        x += v / 500;   // 実測でおよそcm単位
+        x += v / 50;    // 実測でおよそmm単位
         if(resetPos && (abs(theta - theta0) <= 1)){
             resetPos = false;
             x = 0;
