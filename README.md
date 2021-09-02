@@ -1,12 +1,15 @@
 # ESP32で作る倒立振子
 
-![写真](images/front_back.jpg)
-
-[前面拡大](images/front.jpg) / [背面拡大](images/back.jpg)
+![写真](images/pendolino.jpg)
 
 ## メカ
 タミヤの「楽しい工作シリーズ」の部品を使用します。
 [「半日で作る倒立振子」](https://www.instructables.com/%E5%8D%8A%E6%97%A5%E3%81%A7%E4%BD%9C%E3%82%8B%E5%80%92%E7%AB%8B%E6%8C%AF%E5%AD%90/)を参考にしました。
+
+![写真](images/front_back.jpg)
+
+[前面拡大](images/front.jpg) / [背面拡大](images/back.jpg)
+
 - ユニバーサルプレート
 - ダブルギヤボックス（ギア比は114.7：1）
 - スリムタイヤセットの大径ホイール
@@ -76,6 +79,9 @@ ALGYAN 6th IoT基板を使用します。 他のESP32搭載ボードも同等の
 
 ## 発表資料
 NOW PRINTING
+
+## 動画
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QY0mgwFXgrY/0.jpg)](https://www.youtube.com/watch?v=QY0mgwFXgrY)
 
 ## 過去の関連作品
 - Pendolino1 (GR-KURUMIボード使用) → [資料](https://www.slideshare.net/lipoyang/grkurumi-37408753), [動画](https://www.youtube.com/watch?v=4Dj65RKEbd0)
