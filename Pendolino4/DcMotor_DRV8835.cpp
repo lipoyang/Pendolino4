@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "DcMotor_DRV8835.h"
 
-#define PWM_FREQUENCY   1000    // PWM周波数[Hz]
+#define PWM_FREQUENCY   250     // PWM周波数[Hz]
 #define PWM_RESOLUTION  10      // PWM解像度(ビット幅)
 #define PWM_MAX         1023    // PWM最大値
 
@@ -45,12 +45,12 @@ void DcMotor_DRV8835::output(int value)
     
     if(value > 0){
         ledcWrite(m_pwmIn1, pwm);
-        ledcWrite(m_pwmIn2, 0);
+        ledcWrite(m_pwmIn2, 1);
     }else if(value < 0){
-        ledcWrite(m_pwmIn1, 0);
+        ledcWrite(m_pwmIn1, 1);
         ledcWrite(m_pwmIn2, pwm);
     }else{
-        ledcWrite(m_pwmIn1, 0);
-        ledcWrite(m_pwmIn2, 0);
+        ledcWrite(m_pwmIn1, 1);
+        ledcWrite(m_pwmIn2, 1);
     }
 }
