@@ -78,7 +78,7 @@ ALGYAN 6th IoT基板を使用します。 他のESP32搭載ボードも同等の
 - [Pendolino4/data](Pendolino4/data) : 設定画面のHTMLソース
 
 ## 発表資料
-NOW PRINTING
+- [ALGYAN 6th IoT基板で倒立振子](https://www.slideshare.net/lipoyang/algyan-6th-iot)
 
 ## 動画
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QY0mgwFXgrY/0.jpg)](https://www.youtube.com/watch?v=QY0mgwFXgrY)
